@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>FPV Drone Builder</title>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f5f5f3;color:#1a1a1a;padding:1rem}
+.app{max-width:740px;margin:0 auto;padding:1rem 0 3rem}
+.tabs{display:flex;gap:4px;margin-bottom:1.5rem;border-bottom:1px solid rgba(0,0,0,0.12);padding-bottom:0}
+.tab{padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:#666;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s}
+.tab.active{color:#1a1a1a;border-bottom-color:#1a1a1a}
+.tab:hover:not(.active){color:#1a1a1a}
+.progress-bar{display:flex;gap:6px;margin-bottom:1.5rem}
+.ps{height:3px;border-radius:2px;flex:1;background:rgba(0,0,0,0.1);transition:background .3s}
+.ps.done{background:#1a1a1a}.ps.active{background:#888}
+.step-header{display:flex;align-items:center;gap:14px;margin-bottom:1.25rem}
+.step-badge{width:34px;height:34px;border-radius:50%;background:#1a1a1a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;flex-shrink:0}
+.step-title{font-size:17px;font-weight:500}
+.step-sub{font-size:12px;color:#666;margin-top:2px}
+.grid{display:grid;gap:8px}
+.g2{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
+.g3{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.card{background:#fff;border:1px solid rgba(0,0,0,0.1);border-radius:10px;padding:.875rem;cursor:pointer;transition:border-color .15s,transform .1s;position:relative}
+.card:hover{border-color:rgba(0,0,0,0.25);transform:translateY(-1px)}
+.card.sel{border:2px solid #1a1a1a}
+.card-name{font-size:13px;font-weight:500;margin-bottom:3px}
+.card-desc{font-size:11px;color:#666;line-height:1.4}
+.cbadge{position:absolute;top:7px;right:7px;font-size:10px;padding:2px 6px;border-radius:20px;font-weight:500}
+.b-rec{background:#e8f5e9;color:#2e7d32}.b-adv{background:#fff3e0;color:#e65100}.b-pro{background:#e3f2fd;color:#1565c0}
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:1.25rem}
+.btn{padding:7px 18px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid rgba(0,0,0,0.2);background:transparent;color:#1a1a1a;transition:background .15s}
+.btn:hover{background:#f0f0ee}
+.btn-primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.btn-primary:hover{background:#333}
+.btn:disabled{opacity:.3;cursor:not-allowed}
+.btn-green{background:#2e7d32;color:#fff;border-color:#2e7d32}
+.btn-green:hover{background:#1b5e20}
+.btn-blue{background:#1565c0;color:#fff;border-color:#1565c0}
+.btn-blue:hover{background:#0d47a1}
+.sdiv{font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:.08em;margin:1.1rem 0 .6rem}
+.warn{background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:9px 12px;font-size:11px;color:#5d4037;margin-top:8px;line-height:1.5}
+.info{background:#e3f2fd;border:1px solid #90caf9;border-radius:8px;padding:9px 12px;font-size:11px;color:#0d47a1;margin-top:8px;line-height:1.5}
+.scard{background:#f8f8f6;border-radius:10px;padding:1.1rem;margin-bottom:8px}
+.srow{display:flex;justify-content:space-between;align-items:flex-start;padding:5px 0;border-bottom:1px solid rgba(0,0,0,0.06);font-size:12px;gap:8px}
+.srow:last-child{border-bottom:none}
+.slabel{color:#666;flex-shrink:0;min-width:110px}
+.sval{font-weight:500;text-align:right}
+.wblock{background:#fff;border:1px solid rgba(0,0,0,0.1);border-radius:10px;padding:1.1rem;margin-bottom:8px}
+.wtitle{font-size:13px;font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.wi{font-size:11px;color:#666;padding:3px 0;display:flex;gap:7px;align-items:flex-start;line-height:1.4}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.dr{background:#e53935}.db{background:#333}.dy{background:#f9a825}.dg{background:#43a047}.dbl{background:#1e88e5}
+pre{font-size:11px;font-family:monospace;background:#f5f5f5;border-radius:6px;padding:10px;overflow-x:auto;line-height:1.6;color:#1a1a1a}
+.uart-table{width:100%;font-size:11px;border-collapse:collapse;margin-top:6px}
+.uart-table th{text-align:left;color:#666;font-weight:500;padding:3px 7px;border-bottom:1px solid rgba(0,0,0,0.1)}
+.uart-table td{padding:3px 7px;border-bottom:1px solid rgba(0,0,0,0.05)}
+.export-btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.pill{display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;background:#f0f0ee}
+.pid-canvas{width:100%;height:200px;border:1px solid rgba(0,0,0,0.1);border-radius:8px;background:#fff;display:block}
+.waypoint-row{display:flex;gap:8px;align-items:center;margin-bottom:6px;font-size:12px}
+.wp-input{border:1px solid rgba(0,0,0,0.2);border-radius:6px;padding:5px 8px;font-size:12px;background:#fff;color:#1a1a1a;width:90px}
+.tag{display:inline-flex;align-items:center;gap:4px;background:#f0f0ee;border-radius:6px;padding:3px 8px;font-size:11px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useMemo}=React;
+
+const SIZES=[
+  {id:'3inch',name:'3"',sub:'Cinewhoop',icon:'🔵',desc:'Закриті пропелери, безпечний. До 450г.'},
+  {id:'5inch',name:'5"',sub:'Freestyle/Race',icon:'⚡',desc:'Золотий стандарт FPV.',badge:'rec'},
+  {id:'7inch',name:'7"',sub:'Long Range',icon:'🛰️',desc:'GPS навігація, великі відстані.'},
+  {id:'10inch',name:'10"+',sub:'Важке навантаження',icon:'🏗️',desc:'Гекса/окто, 2-4 кг навантаження.',badge:'adv'},
+];
+const PURPOSES={
+  '3inch':[{id:'cinema3',name:'Кінозйомка',icon:'🎬',badge:'rec'},{id:'indoor3',name:'Приміщення',icon:'🏠'}],
+  '5inch':[{id:'freestyle',name:'Фристайл',icon:'🤸',badge:'rec'},{id:'kamikaze',name:'Камікадзе',icon:'💥'},{id:'recon5',name:'Розвідка',icon:'👁️'},{id:'race5',name:'Гонки',icon:'🏁'}],
+  '7inch':[{id:'longrange',name:'Далека розвідка',icon:'🗺️',badge:'rec'},{id:'bomber7',name:'Бомбер',icon:'💣'}],
+  '10inch':[{id:'heavylift',name:'Важкий бомбер',icon:'🚁',badge:'adv'},{id:'cinema10',name:'Кіно (важка)',icon:'🎥'}],
+};
+const FC_MAP={
+  cinema3:{id:'speedybee_f405v3',name:'SpeedyBee F405 V3',fw:'Betaflight',price:'~$75',uarts:4,frame_class:1},
+  indoor3:{id:'betafpv_f4',name:'BETAFPV F4 1S',fw:'Betaflight',price:'~$40',uarts:2,frame_class:1},
+  freestyle:{id:'speedybee_f405v4',name:'SpeedyBee F405 V4',fw:'Betaflight',price:'~$55',uarts:6,frame_class:1},
+  kamikaze:{id:'matek_f405',name:'Matek F405-CTR',fw:'Betaflight',price:'~$45',uarts:5,frame_class:1},
+  recon5:{id:'speedybee_f405v4',name:'SpeedyBee F405 V4',fw:'Betaflight',price:'~$55',uarts:6,frame_class:1},
+  race5:{id:'foxeer_reaper',name:'Foxeer Reaper F7',fw:'Betaflight',price:'~$50',uarts:6,frame_class:1},
+  longrange:{id:'matek_h743',name:'Matek H743-SLIM V3',fw:'ArduPilot/iNav',price:'~$80',uarts:8,frame_class:1},
+  bomber7:{id:'matek_h743',name:'Matek H743-SLIM V3',fw:'ArduPilot/iNav',price:'~$80',uarts:8,frame_class:1},
+  heavylift:{id:'pixhawk6c',name:'Pixhawk 6C',fw:'ArduPilot',price:'~$200',uarts:8,frame_class:2,badge:'pro'},
+  cinema10:{id:'cube_orange',name:'Cube Orange+',fw:'ArduPilot',price:'~$350',uarts:10,frame_class:1,badge:'pro'},
+};
+const RX_OPTIONS=[
+  {id:'elrs24',name:'ExpressLRS 2.4GHz',sub:'RadioMaster RP2',latency:'<3мс',range:'до 5км',best:['freestyle','race5','cinema3','indoor3','recon5','kamikaze'],badge:'rec'},
+  {id:'elrs900',name:'ExpressLRS 900MHz',sub:'BetaFPV ELRS 900',latency:'<5мс',range:'40+км',best:['longrange','bomber7','heavylift','cinema10']},
+  {id:'crossfire',name:'TBS Crossfire Nano',sub:'TBS Nano RX',latency:'~5мс',range:'40км',best:['longrange','bomber7']},
+];
+const TX_OPTIONS=[
+  {id:'tx16s',name:'RadioMaster TX16S Mk2',proto:'ELRS 2.4 + мульти',badge:'rec'},
+  {id:'zorro',name:'RadioMaster Zorro',proto:'ELRS 2.4'},
+  {id:'pocket',name:'RadioMaster Pocket',proto:'ELRS 2.4'},
+  {id:'tango2',name:'TBS Tango 2 Pro',proto:'Crossfire вбудований'},
+];
+const VTX_MAP={
+  cinema3:{id:'dji_o3',name:'DJI O3 Air Unit',type:'digital',res:'4K/1080p',lat:'~22мс',price:'~$230',badge:'rec'},
+  indoor3:{id:'rush_blade',name:'Rush Blade VTX',type:'analog',res:'Аналог 5.8GHz',lat:'~1мс',price:'~$25'},
+  freestyle:{id:'walksnail',name:'Walksnail Avatar Nano',type:'digital',res:'1080p/60fps',lat:'~22мс',price:'~$110',badge:'rec'},
+  kamikaze:{id:'akk_fx3',name:'AKK FX3-OSD 200мВт',type:'analog',res:'Аналог 5.8GHz',lat:'~1мс',price:'~$18'},
+  recon5:{id:'dji_o3',name:'DJI O3 Air Unit',type:'digital',res:'4K/1080p',lat:'~22мс',price:'~$230',badge:'rec'},
+  race5:{id:'hdzero',name:'HDZero Freestyle',type:'digital',res:'720p/60fps',lat:'~4мс',price:'~$120',badge:'rec'},
+  longrange:{id:'walksnail',name:'Walksnail Avatar Nano',type:'digital',res:'1080p/60fps',lat:'~22мс',price:'~$110',badge:'rec'},
+  bomber7:{id:'akk_lr',name:'AKK Ultra LR 1.6Вт',type:'analog',res:'Аналог 5.8GHz',lat:'~1мс',price:'~$35'},
+  heavylift:{id:'walksnail_pro',name:'Walksnail Avatar Pro',type:'digital',res:'4K/30fps',lat:'~22мс',price:'~$200'},
+  cinema10:{id:'dji_o4',name:'DJI O4 Air Unit',type:'digital',res:'4K/60fps',lat:'~20мс',price:'~$320',badge:'pro'},
+};
+const MOTORS_MAP={
+  '3inch':[{id:'xing2_1404',name:'iFlight XING2 1404',kv:'3800KV',stator:'14x04',price:'~$18',badge:'rec'},{id:'emax_1407',name:'Emax ECO II 1407',kv:'3600KV',stator:'14x07',price:'~$14'}],
+  '5inch':[{id:'tmotor_f60',name:'T-Motor F60 Pro IV',kv:'1750KV (6S)',stator:'2306',price:'~$28',badge:'rec'},{id:'xing2_2207',name:'iFlight XING2 2207',kv:'1800KV (6S)',stator:'2207',price:'~$20'},{id:'emax_eco2',name:'Emax ECO II 2306',kv:'2400KV (4S)',stator:'2306',price:'~$12'}],
+  '7inch':[{id:'bh_r5',name:'BrotherHobby R5 2810',kv:'1300KV',stator:'2810',price:'~$25',badge:'rec'},{id:'tmn3515',name:'T-Motor MN3515',kv:'400KV',stator:'3515',price:'~$45'}],
+  '10inch':[{id:'tmn4014',name:'T-Motor MN4014',kv:'330KV',stator:'4014',price:'~$65',badge:'rec'},{id:'xing4114',name:'iFlight XING 4114',kv:'320KV',stator:'4114',price:'~$55'}],
+};
+const CAM_MAP={
+  cinema3:{name:'GoPro Naked Hero 9/10',note:'Найкраще зображення для cinewhoops'},
+  indoor3:{name:'Foxeer Razer Nano',note:'Легка FPV камера без запису'},
+  freestyle:{name:'GoPro Hero 12 + RunCam Nano 4',note:'RunCam для FPV, GoPro для HD запису'},
+  kamikaze:{name:'RunCam Phoenix Nano',note:'Мінімальна вага, лише FPV'},
+  recon5:{name:'DJI O3 (вбудована) + GoPro Hero 12',note:'O3 має власну HD камеру'},
+  race5:{name:'Foxeer Predator V5 Nano',note:'Швидкий WDR сенсор, мінімальна затримка'},
+  longrange:{name:'Walksnail вбудована + Insta360 GO3',note:'Avatar має власну камеру'},
+  bomber7:{name:'Foxeer Razer Mini',note:'Тільки FPV, без запису'},
+  heavylift:{name:'GoPro MAX + 3-осьова підвіска',note:'Підвіска обовязково'},
+  cinema10:{name:'DJI RS4 Pro / Sony FX3 на підвісці',note:'Потребує розрахунку центру ваги'},
+};
+const EXTRAS_MAP={
+  kamikaze:['Скидний механізм (сервопривід)','Посилені рами / запасні мотори'],
+  bomber7:['GPS M10 (обовязково для RTH)','Сервопривід скиду','Barometer для AltHold','Компас (MAG) окремий'],
+  longrange:['GPS Matek M10-5883','Компас в GPS','Barometer BMP280','Buzzer для пошуку','Телеметрія MAVLink'],
+  recon5:['GPS для RTH','Buzzer','Blackbox SPI Flash'],
+  heavylift:['GPS RTK (Here3)','Lidar для посадки','Power Module','Телеметрія MAVLink'],
+  cinema10:['Gimbal підвіска','ADS-B датчик'],
+  freestyle:['Blackbox SPI Flash','Buzzer'],
+  race5:['Blackbox','Buzzer','LED стрип'],
+  cinema3:['GPS для RTH (опційно)','Buzzer'],
+  indoor3:['Buzzer'],
+};
+const UART_MAP={
+  speedybee_f405v4:[{p:'UART1',u:'VTX (SmartAudio / MSP OSD)'},{p:'UART2',u:'RC приймач (CRSF/ELRS)'},{p:'UART3',u:'GPS'},{p:'UART4',u:'ESC телеметрія'},{p:'UART6',u:'Вільний / телеметрія'}],
+  matek_h743:[{p:'UART1',u:'RC приймач (CRSF/ELRS)'},{p:'UART2',u:'GPS (uBlox M10)'},{p:'UART3',u:'VTX MSP / SmartAudio'},{p:'UART4',u:'Телеметрія MAVLink'},{p:'UART7',u:'ESC телеметрія'}],
+  default:[{p:'UART1',u:'VTX (SmartAudio / MSP OSD)'},{p:'UART2',u:'RC приймач (CRSF/ELRS)'},{p:'UART3',u:'GPS (якщо є)'},{p:'UART4',u:'ESC телеметрія'}],
+};
+const STEPS=['Розмір','Призначення','FC','RX/TX','VTX','Мотори','Камера','Додатково','Підсумок'];
+
+// ── PID SIMULATOR ──────────────────────────────────────────────────────────
+function pidStep(P,I,D,setpoint,steps=300){
+  let pos=0,vel=0,integral=0,prevErr=0;
+  const dt=0.01,pts=[];
+  for(let i=0;i<steps;i++){
+    const err=setpoint-pos;
+    integral+=err*dt;
+    const deriv=(err-prevErr)/dt;
+    const output=Math.min(Math.max(P*err+I*integral+D*deriv,-2),2);
+    vel+=output*dt-vel*0.08;
+    pos+=vel*dt;
+    prevErr=err;
+    pts.push({t:i*dt,v:pos});
+  }
+  return pts;
+}
+
+function PIDSim(){
+  const [P,setP]=useState(45);
+  const [I,setI]=useState(65);
+  const [D,setD]=useState(35);
+  const canvasRef=useRef(null);
+  const data=useMemo(()=>pidStep(P/20,I/500,D/2000,1.0),[P,I,D]);
+  const overshoot=useMemo(()=>Math.round((Math.max(...data.map(d=>d.v))-1)*100),[data]);
+  const settleIdx=useMemo(()=>{for(let i=data.length-1;i>=0;i--){if(Math.abs(data[i].v-1)>0.05)return i;}return 0;},[data]);
+  const settleTime=(settleIdx*0.01).toFixed(2);
+  useEffect(()=>{
+    const c=canvasRef.current;if(!c)return;
+    const ctx=c.getContext('2d');
+    const W=c.width,H=c.height;
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+    const pad={l:38,r:12,t:12,b:28};
+    const gW=W-pad.l-pad.r,gH=H-pad.t-pad.b;
+    ctx.strokeStyle='rgba(0,0,0,0.06)';ctx.lineWidth=1;
+    [0,0.25,0.5,0.75,1,1.25].forEach(v=>{
+      const y=pad.t+gH-(v/1.5)*gH;
+      ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+gW,y);ctx.stroke();
+      ctx.fillStyle='rgba(0,0,0,0.35)';ctx.font='10px system-ui';ctx.textAlign='right';
+      ctx.fillText(v.toFixed(2),pad.l-4,y+3);
+    });
+    [0,0.5,1,1.5,2,2.5,3].forEach(t=>{
+      const x=pad.l+(t/3)*gW;
+      ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,pad.t+gH);ctx.stroke();
+      ctx.fillStyle='rgba(0,0,0,0.35)';ctx.font='10px system-ui';ctx.textAlign='center';
+      ctx.fillText(t+'s',x,pad.t+gH+14);
+    });
+    const spY=pad.t+gH-(1/1.5)*gH;
+    ctx.strokeStyle='rgba(67,160,71,0.5)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.moveTo(pad.l,spY);ctx.lineTo(pad.l+gW,spY);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.strokeStyle='#1565c0';ctx.lineWidth=2;ctx.beginPath();
+    data.forEach((d,i)=>{
+      const x=pad.l+(d.t/3)*gW;
+      const y=pad.t+gH-(Math.min(Math.max(d.v,0),1.5)/1.5)*gH;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+    if(settleIdx>0){
+      const sx=pad.l+(settleIdx*0.01/3)*gW;
+      ctx.strokeStyle='rgba(229,57,53,0.5)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+      ctx.beginPath();ctx.moveTo(sx,pad.t);ctx.lineTo(sx,pad.t+gH);ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  },[data,settleIdx]);
+  const quality=overshoot<5&&parseFloat(settleTime)<0.8?'Відмінно ✓':overshoot<15&&parseFloat(settleTime)<1.5?'Добре':'Потребує тюнінгу';
+  return(
+    <div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'8px',marginBottom:'12px'}}>
+        {[['P',P,setP,0,100,'Пропорційний'],['I',I,setI,0,150,'Інтегральний'],['D',D,setD,0,100,'Похідний']].map(([lbl,val,setter,min,max,name])=>(
+          <div key={lbl} style={{background:'#f5f5f5',borderRadius:'8px',padding:'10px 12px'}}>
+            <div style={{display:'flex',justifyContent:'space-between',marginBottom:'6px'}}>
+              <span style={{fontSize:'12px',fontWeight:'500'}}>{lbl} <span style={{fontSize:'10px',color:'#888',fontWeight:'400'}}>{name}</span></span>
+              <span style={{fontSize:'13px',fontWeight:'500'}}>{val}</span>
+            </div>
+            <input type="range" min={min} max={max} value={val} onChange={e=>setter(+e.target.value)} style={{width:'100%'}}/>
+          </div>
+        ))}
+      </div>
+      <canvas ref={canvasRef} width={680} height={200} className="pid-canvas"/>
+      <div style={{display:'flex',gap:'16px',marginTop:'8px',flexWrap:'wrap'}}>
+        <span style={{fontSize:'11px'}}><span style={{color:'#888'}}>Перерегулювання: </span><b style={{color:overshoot<5?'#2e7d32':overshoot<15?'#e65100':'#c62828'}}>{overshoot>0?'+'+overshoot:'0'}%</b></span>
+        <span style={{fontSize:'11px'}}><span style={{color:'#888'}}>Час стабілізації: </span><b>{settleTime}с</b></span>
+        <span style={{fontSize:'11px'}}><span style={{color:'#888'}}>Оцінка: </span><b>{quality}</b></span>
+      </div>
+      <div className="info" style={{marginTop:'10px'}}>
+        <b>Як читати:</b> Синя лінія — реакція дрона. Зелена пунктирна — цільове положення. Червона пунктирна — момент стабілізації (±5%). Збільшення P прискорює реакцію, але може спричинити коливання. D гасить коливання, I усуває статичну помилку.
+      </div>
+      <div style={{marginTop:'12px',display:'flex',gap:'8px',flexWrap:'wrap'}}>
+        {[['Типовий Freestyle',45,65,35],['Агресивний Race',80,45,55],["М'який Cinematic",25,40,20],['Нестабільний (приклад)',90,10,5]].map(([label,p,i,d])=>(
+          <button key={label} className="btn" style={{fontSize:'11px',padding:'5px 10px'}} onClick={()=>{setP(p);setI(i);setD(d)}}>{label}</button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── EXPORT ─────────────────────────────────────────────────────────────────
+function generateArduParam(sel,fc){
+  return[
+    `# ArduPilot Parameter File`,
+    `# Generated by FPV Drone Builder`,
+    `# Build: ${sel.purpose} / ${fc?.name}`,
+    `# Date: ${new Date().toISOString().split('T')[0]}`,`#`,
+    `FRAME_CLASS,${sel.purpose==='heavylift'?2:1}`,`FRAME_TYPE,1`,
+    `MOT_PWM_TYPE,6`,`INS_GYRO_FILTER,80`,
+    `ATC_RAT_RLL_P,0.135`,`ATC_RAT_RLL_I,0.135`,`ATC_RAT_RLL_D,0.0036`,
+    `ATC_RAT_PIT_P,0.135`,`ATC_RAT_PIT_I,0.135`,`ATC_RAT_PIT_D,0.0036`,
+    `ATC_RAT_YAW_P,0.18`,`ATC_RAT_YAW_I,0.018`,
+    `ATC_ACCEL_R_MAX,110000`,`ATC_ACCEL_P_MAX,110000`,`ATC_ACCEL_Y_MAX,27000`,
+    `PILOT_SPEED_UP,250`,`PILOT_ACCEL_Z,250`,
+    `RTL_ALT,3000`,`RTL_SPEED,1000`,`WPNAV_SPEED,500`,`WPNAV_RADIUS,200`,
+    `BATT_MONITOR,4`,
+    `BATT_LOW_VOLT,${sel.size==='5inch'?'21.6':'14.4'}`,
+    `BATT_CRT_VOLT,${sel.size==='5inch'?'19.8':'13.2'}`,
+    `GPS_TYPE,1`,`GPS_GNSS_MODE,0`,`COMPASS_USE,1`,
+    `ARMING_CHECK,1`,`FS_THR_ENABLE,1`,`FS_THR_VALUE,975`,
+    `FS_CRASH_CHECK,1`,`SCHED_LOOP_RATE,400`,
+  ].join('\n');
+}
+function generateBFDiff(sel,fc,rx){
+  return`# Betaflight diff all\n# Build: ${sel.purpose} / ${fc?.name}\n# Date: ${new Date().toISOString().split('T')[0]}\n\nfeature -RX_PARALLEL_PWM\nfeature -RX_MSP\nfeature RX_SERIAL\nfeature OSD\n\nset motor_pwm_protocol = DSHOT600\nset dshot_bidir = ON\nset rpm_filter_harmonics = 3\nset rpm_filter_min_hz = 100\n\nserial 1 64 115200 57600 0 115200\nset receiver_type = SERIAL\nset serialrx_provider = CRSF\nset serialrx_halfduplex = OFF\n\nserial 0 131072 115200 57600 0 115200\n\nset vbat_scale = 110\nset vbat_warning_cell_voltage = 350\nset vbat_critical_cell_voltage = 330\nset ibata_scale = 250\n\nset p_roll = 45\nset i_roll = 65\nset d_roll = 35\nset f_roll = 120\nset p_pitch = 47\nset i_pitch = 67\nset d_pitch = 37\nset f_pitch = 125\nset p_yaw = 45\nset i_yaw = 55\nset f_yaw = 100\n\nset dterm_lpf1_static_hz = 75\nset dterm_lpf2_static_hz = 150\nset gyro_lpf1_static_hz = 0\nset gyro_lpf2_static_hz = 300\n\nset osd_units = METRIC\n\nsave`;
+}
+function generateWaypoints(wps){
+  const header='QGC WPL 110\n0\t1\t0\t16\t0\t0\t0\t0\t0.000000\t0.000000\t0.000000\t1';
+  return[header,...wps.map((wp,i)=>`${i+1}\t0\t3\t16\t0\t0\t0\t0\t${wp.lat}\t${wp.lng}\t${wp.alt}\t1`)].join('\n');
+}
+function downloadFile(content,filename){
+  const blob=new Blob([content],{type:'text/plain'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=filename;a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── EXPORT TAB ─────────────────────────────────────────────────────────────
+function ExportTab({sel,fc,rx}){
+  const [wps,setWps]=useState([{lat:'48.4500',lng:'34.9800',alt:'50'},{lat:'48.4510',lng:'34.9810',alt:'50'},{lat:'48.4520',lng:'34.9800',alt:'50'}]);
+  const addWp=()=>setWps(w=>[...w,{lat:'',lng:'',alt:'50'}]);
+  const removeWp=i=>setWps(w=>w.filter((_,j)=>j!==i));
+  const updateWp=(i,f,v)=>setWps(w=>w.map((wp,j)=>j===i?{...wp,[f]:v}:wp));
+  const isArdupilot=fc&&fc.fw.includes('ArduPilot');
+  const isBF=fc&&fc.fw.includes('Betaflight');
+  if(!sel.purpose)return<div className="warn">⚠ Спочатку пройди конструктор.</div>;
+  return(
+    <div>
+      <div className="sdiv">Конфігурація</div>
+      <div className="tag" style={{marginBottom:'12px'}}>{fc?.name} · {fc?.fw} · {sel.purpose}</div>
+      {isArdupilot&&<div className="wblock">
+        <div className="wtitle">ArduPilot .param файл</div>
+        <div className="card-desc" style={{marginBottom:'8px'}}>Mission Planner → Full Parameter List → Load from file. Або SITL: <code>param load file.param</code></div>
+        <pre style={{maxHeight:'160px',overflow:'auto'}}>{generateArduParam(sel,fc)}</pre>
+        <div className="export-btn-row">
+          <button className="btn btn-green" onClick={()=>downloadFile(generateArduParam(sel,fc),`ardupilot_${sel.purpose}.param`)}>⬇ Завантажити .param</button>
+        </div>
+      </div>}
+      {isBF&&<div className="wblock">
+        <div className="wtitle">Betaflight diff all</div>
+        <div className="card-desc" style={{marginBottom:'8px'}}>Betaflight Configurator → CLI → вставити → Enter</div>
+        <pre style={{maxHeight:'160px',overflow:'auto'}}>{generateBFDiff(sel,fc,rx)}</pre>
+        <div className="export-btn-row">
+          <button className="btn btn-green" onClick={()=>downloadFile(generateBFDiff(sel,fc,rx),`betaflight_${sel.purpose}_diff.txt`)}>⬇ Завантажити diff.txt</button>
+        </div>
+      </div>}
+      <div className="wblock">
+        <div className="wtitle">MAVLink Waypoints (.waypoints)</div>
+        <div className="card-desc" style={{marginBottom:'10px'}}>Mission Planner → Plan → Load WP File. SITL: <code>wp load mission.waypoints</code></div>
+        {wps.map((wp,i)=>(
+          <div key={i} className="waypoint-row">
+            <span style={{fontSize:'11px',color:'#888',minWidth:'50px'}}>WP {i+1}</span>
+            <input className="wp-input" placeholder="Lat" value={wp.lat} onChange={e=>updateWp(i,'lat',e.target.value)}/>
+            <input className="wp-input" placeholder="Lng" value={wp.lng} onChange={e=>updateWp(i,'lng',e.target.value)}/>
+            <input className="wp-input" placeholder="Alt(м)" value={wp.alt} onChange={e=>updateWp(i,'alt',e.target.value)} style={{width:'70px'}}/>
+            <button className="btn" style={{padding:'4px 10px',fontSize:'11px'}} onClick={()=>removeWp(i)}>✕</button>
+          </div>
+        ))}
+        <button className="btn" style={{fontSize:'11px',marginTop:'4px'}} onClick={addWp}>+ Додати точку</button>
+        <div className="export-btn-row" style={{marginTop:'10px'}}>
+          <button className="btn btn-blue" onClick={()=>downloadFile(generateWaypoints(wps),`mission_${sel.purpose}.waypoints`)}>⬇ Завантажити .waypoints</button>
+        </div>
+      </div>
+      <div className="info">
+        <b>Запуск SITL ArduPilot:</b><br/>
+        1. <code>git clone https://github.com/ArduPilot/ardupilot && cd ardupilot</code><br/>
+        2. <code>Tools/environment_install/install-prereqs-ubuntu.sh && . ~/.profile</code><br/>
+        3. <code>sim_vehicle.py -v ArduCopter --console --map</code><br/>
+        4. <code>param load ardupilot_{sel.purpose}.param</code><br/>
+        5. <code>wp load mission_{sel.purpose}.waypoints</code><br/>
+        6. <code>mode auto &amp;&amp; arm throttle</code>
+      </div>
+    </div>
+  );
+}
+
+// ── MAIN ───────────────────────────────────────────────────────────────────
+export default function App(){
+  const [activeTab,setActiveTab]=useState(0);
+  const [step,setStep]=useState(0);
+  const [sel,setSel]=useState({size:null,purpose:null,fc:null,rx:null,tx:null,vtx:null,motor:null,cam:null,extras:[]});
+  const purposes=sel.size?PURPOSES[sel.size]||[]:[];
+  const motors=sel.size?MOTORS_MAP[sel.size]||[]:[];
+  const fc=sel.purpose?FC_MAP[sel.purpose]:null;
+  const vtxRec=sel.purpose?VTX_MAP[sel.purpose]:null;
+  const camInfo=sel.purpose?CAM_MAP[sel.purpose]:null;
+  const extrasRec=sel.purpose?EXTRAS_MAP[sel.purpose]||[]:[];
+  const uarts=fc?UART_MAP[fc.id]||UART_MAP.default:UART_MAP.default;
+  const pick=(f,v)=>setSel(s=>({...s,[f]:v}));
+  const toggleExtra=e=>setSel(s=>({...s,extras:s.extras.includes(e)?s.extras.filter(x=>x!==e):[...s.extras,e]}));
+  const canNext=[!!sel.size,!!sel.purpose,true,!!sel.rx&&!!sel.tx,true,!!sel.motor,true,true,true][step];
+  const badge=b=>{if(!b)return null;const m={rec:['b-rec','рек'],adv:['b-adv','складно'],pro:['b-pro','проф']};const[c,l]=m[b]||[];return<span className={`cbadge ${c}`}>{l}</span>};
+  const reset=()=>{setStep(0);setSel({size:null,purpose:null,fc:null,rx:null,tx:null,vtx:null,motor:null,cam:null,extras:[]});};
+  return(
+    <div className="app">
+      <div style={{marginBottom:'1rem'}}><div style={{fontSize:'21px',fontWeight:'500'}}>FPV Drone Builder</div></div>
+      <div className="tabs">
+        {['🔧 Конструктор','📈 PID Симулятор','💾 Експорт'].map((t,i)=>(
+          <button key={i} className={`tab ${activeTab===i?'active':''}`} onClick={()=>setActiveTab(i)}>{t}</button>
+        ))}
+      </div>
+
+      {activeTab===0&&(<>
+        <div className="progress-bar">{STEPS.map((_,i)=><div key={i} className={`ps ${i<step?'done':i===step?'active':''}`}/>)}</div>
+        <div className="step-header">
+          <div className="step-badge" style={step===8?{background:'#43a047'}:{}}>{step===8?'✓':step+1}</div>
+          <div><div className="step-title">{STEPS[step]}</div><div className="step-sub">Крок {step+1} з {STEPS.length}</div></div>
+        </div>
+        {step===0&&<div className="grid g2">{SIZES.map(s=>(
+          <div key={s.id} className={`card ${sel.size===s.id?'sel':''}`} onClick={()=>{pick('size',s.id);setSel(x=>({...x,purpose:null,fc:null,rx:null,tx:null,vtx:null,motor:null,cam:null,extras:[]}));}}>
+            {badge(s.badge)}<div style={{fontSize:'22px',marginBottom:'6px'}}>{s.icon}</div>
+            <div className="card-name">{s.name} — {s.sub}</div><div className="card-desc">{s.desc}</div>
+          </div>
+        ))}</div>}
+        {step===1&&<div className="grid g2">{purposes.map(p=>(
+          <div key={p.id} className={`card ${sel.purpose===p.id?'sel':''}`} onClick={()=>pick('purpose',p.id)}>
+            {badge(p.badge)}<div style={{fontSize:'22px',marginBottom:'6px'}}>{p.icon}</div>
+            <div className="card-name">{p.name}</div>
+          </div>
+        ))}</div>}
+        {step===2&&fc&&<>
+          <div className="card sel" style={{cursor:'default'}}>
+            {badge(fc.badge)}
+            <div className="card-name" style={{fontSize:'15px'}}>{fc.name}</div>
+            <div className="card-desc" style={{marginTop:'4px'}}>Прошивка: <b>{fc.fw}</b> · {fc.uarts} UART · {fc.price}</div>
+          </div>
+          {!sel.fc&&pick('fc',fc.id)}
+          <div className="sdiv">Розподіл UART</div>
+          <div className="wblock"><table className="uart-table"><thead><tr><th>Порт</th><th>Призначення</th></tr></thead><tbody>
+            {uarts.map((u,i)=><tr key={i}><td style={{fontWeight:'500'}}>{u.p}</td><td style={{color:'#666'}}>{u.u}</td></tr>)}
+          </tbody></table></div>
+        </>}
+        {step===3&&<>
+          <div className="sdiv">Приймач (RX)</div>
+          <div className="grid g2">{RX_OPTIONS.map(r=>{
+            const best=sel.purpose&&r.best.includes(sel.purpose);
+            return<div key={r.id} className={`card ${sel.rx===r.id?'sel':''}`} onClick={()=>pick('rx',r.id)}>
+              {(r.badge||best)&&<span className="cbadge b-rec">{best?'підходить':'рек'}</span>}
+              <div className="card-name">{r.name}</div><div className="card-desc">{r.sub}</div>
+              <div style={{marginTop:'6px',display:'flex',gap:'6px',flexWrap:'wrap'}}>
+                <span className="pill">⚡{r.latency}</span><span className="pill">📡{r.range}</span>
+              </div>
+            </div>;
+          })}</div>
+          <div className="sdiv">Пульт (TX)</div>
+          <div className="grid g2">{TX_OPTIONS.map(t=>(
+            <div key={t.id} className={`card ${sel.tx===t.id?'sel':''}`} onClick={()=>pick('tx',t.id)}>
+              {badge(t.badge)}<div className="card-name">{t.name}</div><div className="card-desc">{t.proto}</div>
+            </div>
+          ))}</div>
+        </>}
+        {step===4&&vtxRec&&<>
+          <div className="card sel" style={{cursor:'default'}}>
+            {badge(vtxRec.badge)}
+            <div className="card-name" style={{fontSize:'15px'}}>{vtxRec.name}</div>
+            <div style={{display:'flex',gap:'8px',flexWrap:'wrap',marginTop:'8px'}}>
+              <span className="pill" style={{background:vtxRec.type==='digital'?'#e3f2fd':'#fff3e0',color:vtxRec.type==='digital'?'#1565c0':'#e65100'}}>{vtxRec.type==='digital'?'Цифровий':'Аналог'}</span>
+              <span className="pill">📺{vtxRec.res}</span><span className="pill">⚡{vtxRec.lat}</span><span className="pill">💰{vtxRec.price}</span>
+            </div>
+          </div>
+          {!sel.vtx&&pick('vtx',vtxRec.id)}
+        </>}
+        {step===5&&<div className="grid g2">{motors.map(m=>(
+          <div key={m.id} className={`card ${sel.motor===m.id?'sel':''}`} onClick={()=>pick('motor',m.id)}>
+            {badge(m.badge)}<div style={{fontSize:'20px',marginBottom:'6px'}}>⚙️</div>
+            <div className="card-name">{m.name}</div>
+            <div className="card-desc">KV: {m.kv} · {m.stator}</div>
+            <div className="card-desc" style={{marginTop:'3px'}}>💰{m.price}/шт</div>
+          </div>
+        ))}</div>}
+        {step===6&&camInfo&&<div className="card sel" style={{cursor:'default'}}>
+          <div style={{fontSize:'20px',marginBottom:'6px'}}>📷</div>
+          <div className="card-name" style={{fontSize:'14px'}}>{camInfo.name}</div>
+          <div className="card-desc" style={{marginTop:'5px'}}>{camInfo.note}</div>
+          {!sel.cam&&pick('cam','ok')}
+        </div>}
+        {step===7&&<div className="grid" style={{gridTemplateColumns:'1fr'}}>{extrasRec.map((e,i)=>(
+          <div key={i} className={`card ${sel.extras.includes(e)?'sel':''}`} onClick={()=>toggleExtra(e)} style={{display:'flex',alignItems:'center',gap:'10px',padding:'.7rem 1rem'}}>
+            <span style={{fontSize:'17px'}}>{sel.extras.includes(e)?'☑':'☐'}</span>
+            <span style={{fontSize:'13px'}}>{e}</span>
+          </div>
+        ))}</div>}
+        {step===8&&<>
+          <div className="scard">
+            {[['Рама',SIZES.find(s=>s.id===sel.size)?.name+' '+SIZES.find(s=>s.id===sel.size)?.sub],['Призначення',purposes.find(p=>p.id===sel.purpose)?.name],['FC',fc?.name+' ('+fc?.fw+')'],['RX',RX_OPTIONS.find(r=>r.id===sel.rx)?.name],['TX',TX_OPTIONS.find(t=>t.id===sel.tx)?.name],['VTX',vtxRec?.name],['Мотори (x4)',motors.find(m=>m.id===sel.motor)?.name],['Камера',camInfo?.name],['Додатково',sel.extras.length>0?sel.extras.join(', '):'—']].map(([l,v],i)=>(
+              <div key={i} className="srow"><span className="slabel">{l}</span><span className="sval">{v||'—'}</span></div>
+            ))}
+          </div>
+          <div className="wblock">
+            {[{c:'dr',t:'BAT+ → ESC → FC VBAT (LC фільтр для VTX)'},{c:'db',t:'BAT- → ESC → FC GND'},{c:'dy',t:'5V BEC → RX, FPV камера, VTX'},{c:'dg',t:'9V BEC → аналоговий VTX або сервоприводи'}].map((p,i)=>(
+              <div key={i} className="wi"><div className={`dot ${p.c}`}/><span>{p.t}</span></div>
+            ))}
+          </div>
+          <div style={{display:'flex',gap:'8px',flexWrap:'wrap',marginTop:'12px'}}>
+            <button className="btn btn-green" onClick={()=>downloadFile(generateArduParam(sel,fc),`ardupilot_${sel.purpose}.param`)}>⬇ .param</button>
+            <button className="btn btn-blue" onClick={()=>downloadFile(generateBFDiff(sel,fc,sel.rx),`betaflight_${sel.purpose}_diff.txt`)}>⬇ diff.txt</button>
+            <button className="btn" onClick={()=>setActiveTab(2)}>📍 Маршрут</button>
+            <button className="btn" onClick={()=>setActiveTab(1)}>📈 PID</button>
+            <button className="btn" onClick={reset}>↺ Новий</button>
+          </div>
+        </>}
+        <div className="nav-row">
+          <button className="btn" onClick={()=>setStep(s=>Math.max(0,s-1))} disabled={step===0}>← Назад</button>
+          {step<STEPS.length-1&&<button className="btn btn-primary" onClick={()=>{if(step===2&&fc&&!sel.fc)pick('fc',fc.id);setStep(s=>s+1);}} disabled={!canNext}>Далі →</button>}
+        </div>
+      </>)}
+
+      {activeTab===1&&<>
+        <div style={{marginBottom:'1rem'}}>
+          <div style={{fontSize:'15px',fontWeight:'500',marginBottom:'4px'}}>PID Response Simulator</div>
+          <div style={{fontSize:'12px',color:'#666'}}>Симуляція реакції дрона на step input. Крути параметри — бачиш реакцію в реальному часі.</div>
+        </div>
+        <PIDSim/>
+        <div className="warn" style={{marginTop:'12px'}}>Це спрощена модель другого порядку, не фізичний SITL. Для точного тюнінгу використовуй Blackbox або ArduPilot Autotune.</div>
+      </>}
+
+      {activeTab===2&&<ExportTab sel={sel} fc={fc} rx={sel.rx}/>}
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
